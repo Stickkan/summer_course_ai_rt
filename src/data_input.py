@@ -1,7 +1,7 @@
 import threading
 import queue
 import numpy as np
-from config import Config
+from src.config import Config
 
 # Classes to handle data input from either a file or an ADC, interface
 # is identical so as to be interchangeable
