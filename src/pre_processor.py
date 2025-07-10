@@ -1,9 +1,9 @@
 import numpy as np
 from collections import deque
 from numpy.typing import NDArray
-from src.config import Config
-from src.data_input import FileInput, SensorInput
-from src.logger import Logger
+from config import Config
+from data_input import FileInput, SensorInput
+from logger import Logger
 
 
 class PreProcessor:
