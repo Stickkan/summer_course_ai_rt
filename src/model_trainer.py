@@ -146,7 +146,6 @@ def split_data(X, Y, train_ratio=0.7, val_ratio=0.2):
     return (X_train, Y_train), (X_val, Y_val), (X_test, Y_test)
 
 
-
 def build_lstm_model(input_shape, num_classes):
     model = Sequential(
         [
@@ -154,10 +153,10 @@ def build_lstm_model(input_shape, num_classes):
             Normalization(),
             LSTM(32, unroll=True),
             Dense(6, activation='relu'),
-            Dense(2, activation='softmax')
+            Dense(6, activation='softmax')
         ]
     )
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     return model
 
@@ -207,23 +206,24 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
     x_test, y_test = reshape_data_vec(X_test, Y_test)
 
     print(f"Model input shape: {x_train.shape}")
-    model = build_lstm_model((x_train.shape[0], x_train.shape[1],), num_classes)
+    print(f"Model output shape: {y_train.shape}")
+    model = build_lstm_model((x_train.shape[1],1,), num_classes)
     model.summary()
-    
+
     # Callbacks
     early_stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
         restore_best_weights=True
     )
-    
+
     reduce_lr = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.2,
         patience=5,
         min_lr=0.001
     )
-    
+
     history = model.fit(
             x_train, y_train,
             validation_data=(x_val, y_val),
@@ -232,7 +232,7 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
             callbacks=[early_stopping, reduce_lr],
             verbose=1
         )
-        
+
     return model, history
 
 
@@ -262,5 +262,6 @@ if __name__ == '__main__':
         X, Y = pre_process(input_dir, output_dir, output_file, model_config)
 
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = split_data(X, Y)
-
+    print(np.unique_values(Y))
     train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(np.unique_values(Y)))
+    
