@@ -12,6 +12,7 @@ def compute_wamp(window, threshold=0.02):
 def compute_mavs(window):
     half = len(window) // 2
     return np.abs(compute_mav(window[:half]) - compute_mav(window[half:]))
+    
 
 def extract_features(window, features = ['mav', 'wl', 'wamp', 'mavs'], wamp_threshold=0.02):
     extracted_features = []
@@ -23,5 +24,5 @@ def extract_features(window, features = ['mav', 'wl', 'wamp', 'mavs'], wamp_thre
         elif feature == 'wamp':
             extracted_features.append(compute_wamp(window, threshold=wamp_threshold))
         elif feature == 'mavs':
-            extracted_features.append(compute_mavs(window))
+            extracted_features.append(compute_mavs(window))            
     return extracted_features
