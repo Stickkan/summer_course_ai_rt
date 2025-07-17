@@ -233,6 +233,11 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
             verbose=1
         )
 
+     # Evaluate on test set
+    test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+    print(f"Test Accuracy: {test_accuracy:.4f}")
+    print(f"Test Loss: {test_loss:.4f}")
+
     return model, history
 
 
@@ -249,19 +254,25 @@ if __name__ == '__main__':
         features=['mav', 'wl', 'wamp', 'mavs']
     )
 
+    f_name = 'ninapro_DB4_4_emg'
     input_dir = os.path.join('data', 'DB4_prepared')  # Folder to glob
-    output_dir = "model"
-    pkl_file = 'ninapro_DB4_4_emg.pkl'
-    output_file = os.path.join(output_dir, pkl_file)
+    output_dir = os.path.join("model", f_name)
+    pkl_path = os.path.join(output_dir, f_name  + '.pkl')
+    model_path = os.path.join(output_dir, f_name + '.keras')
+    training_history_path = os.path.join(output_dir, f_name + '_training_history.pkl')
 
-    if os.path.exists(output_file):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    if os.path.exists(pkl_path):
         print("Loading data from file")
-        X, Y = joblib.load(output_file)
+        X, Y = joblib.load(pkl_path)
     else:
         print("Pre-processing from csv-files")
-        X, Y = pre_process(input_dir, output_dir, output_file, model_config)
+        X, Y = pre_process(input_dir, output_dir, pkl_path, model_config)
 
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = split_data(X, Y)
     print(np.unique_values(Y))
-    train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(np.unique_values(Y)))
-    
+    model, history = train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(np.unique_values(Y)))
+    model.save(model_path)
+    joblib.dump(history.history, training_history_path)
