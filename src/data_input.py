@@ -25,8 +25,10 @@ class SensorInput:
 
 
 class FileInput:
+    #! is_done(), has_next() and next() returns a bool... Ask Christopher
 
     def __init__(self, config) -> None:
+    #* In __init__ Loads the data from the Ninapro DB4 into the self.data using the numpy library
         if config is None:
             raise ValueError('No config provided')
 
@@ -35,11 +37,8 @@ class FileInput:
 
 
     def _pop_front(self, array, n=200):
-        """
-        Pop the first n elements from the array and return them as a new array.
-        Stolen from Ludwig Bogsveen
-        """
-
+    #* _pop_front() the first n elements from the array and return them as a new array.
+    #* Borrowed from Ludwig Bogsveen
         if len(array) < n:
             raise ValueError("Not enough elements to pop.")
 
@@ -66,6 +65,8 @@ class FileInput:
 
 
 def get_input_handle(type: str, config: Config | None) -> SensorInput | FileInput:
+    #* The -> operator specifies which return type SHOULD be returned.
+    #* Depending on the input ('sensor' or 'file') a SensorInput class or FileInput class is returned.
     if type == 'sensor':
         return SensorInput()
     elif type == 'file':

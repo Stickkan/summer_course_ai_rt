@@ -14,6 +14,7 @@ from feature_extraction import extract_features
 
 @dataclass
 class ModelConfig:
+#* Similar to a struct in C. Specifies type for each variable.
     window_size: int
     overlap: float
     fs: int
@@ -30,10 +31,12 @@ def get_csv_file_list(dir: str) -> list[str]:
 
 
 def get_file_data(file_path: str):
-    df = pd.read_csv(file_path, sep=' ', header=0)
+    #* df = data file and contains the csv file created earlier.
+    df = pd.read_csv(file_path, sep=' ', header=0) #! Shouldn't sep = ',' since it is a csv file
 
     signals = []
-    for i in df.columns[0:-1]:
+    for i in df.columns[0:-1]: #! Maybe skip the -1 i.e. [0:]. Should contain all columns?
+        #* Appends each column to the signal list
         signals.append(df[i].to_numpy())
 
     labels = df['label'].to_numpy()
@@ -44,18 +47,22 @@ def get_file_data(file_path: str):
 def get_multiple_files_data(files: list[str], step: int, window_size: int):
     data = []
     for f in files:
+        #* Returns values for each variable from get_file_data(f).
         signals, labels, data_len = get_file_data(f)
         windows_count = (data_len - window_size) // step + 1
+        #* Append dictionary within the data list where the 'key' is saved together with a key i.e. 'signals'(key):signals(value)
         data.append({'signals': signals, 'labels': labels, 'data_len': data_len, 'windows_count': windows_count})
 
     return data
 
 
 def get_majority_label(window):
+    #* Returns a list where the first element holds most common label.
     return Counter(window).most_common(1)[0][0]
 
 
 def to_windows(signals, step, windows_size, windows_count):
+    #*
     windows = []
     for i in range(windows_count):
         start = i * step
