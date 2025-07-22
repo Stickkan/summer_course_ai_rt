@@ -10,6 +10,8 @@ from tensorflow.keras.layers import LSTM, Dense, InputLayer, Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from dataclasses import dataclass
 from feature_extraction import extract_features
+import toml
+
 
 
 @dataclass
@@ -225,11 +227,18 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
 
     return model, history
 
+def save_config(model_config: ModelConfig, model_path: str, config_path: str, output_states: list[int]) -> None:
+    config = toml.dumps(model_config.__dict__)
+    config += f"model_path = '{model_path}'"
+    
+    with open(config_path, 'w') as f:
+        f.write(config)
+
 
 if __name__ == '__main__':
     #  Some values for testing
     model_config = ModelConfig(
-        window_size=200,
+        window_size=400,
         overlap=0.5,
         fs=0,
         lowcut=20,
@@ -245,6 +254,7 @@ if __name__ == '__main__':
     pkl_path = os.path.join(output_dir, f_name  + '.pkl')
     model_path = os.path.join(output_dir, f_name + '.keras')
     training_history_path = os.path.join(output_dir, f_name + '_training_history.pkl')
+    config_path = os.path.join(output_dir, f_name  + '.toml')
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -257,7 +267,8 @@ if __name__ == '__main__':
         X, Y = pre_process(input_dir, output_dir, pkl_path, model_config)
 
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = split_data(X, Y)
-    print(np.unique_values(Y))
+    output_states = np.unique_values(Y).tolist()
     model, history = train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(np.unique_values(Y)))
     model.save(model_path)
     joblib.dump(history.history, training_history_path)
+    save_config(model_config, model_path, config_path, output_states)

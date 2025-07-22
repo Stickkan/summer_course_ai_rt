@@ -12,6 +12,8 @@ class Config:
     normalization: str
     pre_proc_buffer_len: int
     features: list[str]
+    model_path: str
+    model_states: list[int]
 
 def get_config(file_path: str) -> Config:
 #* Open the file in read mode and then unpacking contents using toml.

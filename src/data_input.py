@@ -8,7 +8,7 @@ from config import Config
 
 class SensorInput:
 
-    def __init__(self) -> None:
+    def __init__(self, config) -> None:
         pass
 
 

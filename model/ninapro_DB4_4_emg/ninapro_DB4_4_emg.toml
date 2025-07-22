@@ -1,0 +1,9 @@
+window_size = 400
+overlap = 0.5
+fs = 0
+lowcut = 20
+highcut = 450
+filter_order = 4
+wamp_threshold = 0.02
+features = [ "mav", "wl", "wamp", "mavs",]
+model_path = 'model/ninapro_DB4_4_emg/ninapro_DB4_4_emg.keras'
