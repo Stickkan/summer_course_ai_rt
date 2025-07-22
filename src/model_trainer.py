@@ -57,9 +57,9 @@ def get_multiple_files_data(files: list[str], step: int, window_size: int):
 
 
 def get_majority_label(window):
-    #* Returns a list where the first element holds most common label. 
+    #* Returns the most common label. 
     #* Usually .most_common() returns a list with a tuple with the most common element as well as the count.
-    #* But with the addition of [0][0] it only returns the first element without count
+    #* But with the addition of [0][0] it only returns the first element without count. The type is set automatically (as usual for python).
     return Counter(window).most_common(1)[0][0]
 
 
@@ -116,28 +116,28 @@ def process_data(signals, step: int, windows_count, config: ModelConfig):
 
 def process_labels(labels, step: int, windows_count, config: ModelConfig) -> list[int]:
     windowed_labels = to_windows(signals=labels, step=step, windows_size=config.window_size, windows_count=windows_count)
-
+    #? is the name of the variable 'windowed_labels' suitable. to_windows() returns a list within a list with the overlapped data.
     Y = []
     for w in windowed_labels:
         Y.append(get_majority_label(w))
     return Y
 
 
-def split_data(X, Y, train_ratio=0.7, val_ratio=0.2):
-    X_train, X_temp, Y_train, Y_temp = train_test_split(X, Y, train_size=train_ratio, random_state=42)  # training and combined validation and test
-    X_val, X_test, Y_val, Y_test = train_test_split(X_temp, Y_temp, test_size=val_ratio, random_state=42)  # split up validation and test
+def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): #? Why not use the entire dataset? 0.7 + 0.2 = 0.9
+    X_train, X_temp, Y_train, Y_temp = train_test_split(X, Y, train_size=train_ratio, random_state=42)  #* Training and combined validation and test
+    X_val, X_test, Y_val, Y_test = train_test_split(X_temp, Y_temp, test_size=val_ratio, random_state=42)  #* Split up validation and test
 
     return (X_train, Y_train), (X_val, Y_val), (X_test, Y_test)
 
 
-def build_lstm_model(input_shape, num_classes):
+def build_lstm_model(input_shape, num_classes): #? the argument num_classes is not used. Is it there as a placeholder for future use?
     model = Sequential(
         [
-            InputLayer(shape=input_shape, unroll=True),
+            InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
             Normalization(),
             LSTM(32, unroll=True),
             Dense(6, activation='relu'),
-            Dense(6, activation='softmax')
+            Dense(6, activation='softmax') #* Different activation functions for each layer 
         ]
     )
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -145,12 +145,13 @@ def build_lstm_model(input_shape, num_classes):
     return model
 
 
-def pre_process(input_dir: str, output_dir: str, output_file: str, config: ModelConfig):
-    input_files = get_csv_file_list(input_dir)  # Get csv files globbed
+def pre_process(input_dir: str, output_dir: str, output_file: str, config: ModelConfig): #? the argument output_dir is not used. Is it there as a placeholder for future use?
+    input_files = get_csv_file_list(input_dir)  #* Get csv files globbed (globbed = popular library)
     step = int(model_config.window_size * model_config.overlap)
     test_data = get_multiple_files_data(files=input_files, step=step, window_size=config.window_size)
     processed_test_data = process_multiple_files(data=test_data, step=step, config=config)
 
+    #* joblib is a popular library which is used to save python objects and is optimized for large data.
     joblib.dump(processed_test_data, output_file)
     print(f"Saved {output_file} for future use.")
 
@@ -158,7 +159,7 @@ def pre_process(input_dir: str, output_dir: str, output_file: str, config: Model
 
 
 def reshape_data_vec(X, Y):
-    """Vectorized version of the reshaping function"""
+    #* Vectorized version of the reshaping function
 
     all_windows = []
     all_labels = []
@@ -167,10 +168,10 @@ def reshape_data_vec(X, Y):
         file_X = np.array(X[file_idx])  # Shape: (n_channels, n_windows, n_features)
         file_Y = np.array(Y[file_idx])  # Shape: (n_windows,)
 
-        # Transpose to (n_windows, n_channels, n_features)
+        #* Transpose to (n_windows, n_channels, n_features)
         file_X = file_X.transpose(1, 0, 2)
 
-        # Reshape to (n_windows, n_channels * n_features)
+        #* Reshape to (n_windows, n_channels * n_features)
         file_X_reshaped = file_X.reshape(file_X.shape[0], -1)
 
         all_windows.append(file_X_reshaped)
