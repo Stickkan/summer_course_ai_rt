@@ -165,8 +165,8 @@ def reshape_data_vec(X, Y):
     all_labels = []
 
     for file_idx in range(len(X)):
-        file_X = np.array(X[file_idx])  # Shape: (n_channels, n_windows, n_features)
-        file_Y = np.array(Y[file_idx])  # Shape: (n_windows,)
+        file_X = np.array(X[file_idx])  #* Shape: (n_channels, n_windows, n_features)
+        file_Y = np.array(Y[file_idx])  #* Shape: (n_windows)
 
         #* Transpose to (n_windows, n_channels, n_features)
         file_X = file_X.transpose(1, 0, 2)
@@ -177,7 +177,7 @@ def reshape_data_vec(X, Y):
         all_windows.append(file_X_reshaped)
         all_labels.append(file_Y)
 
-    # Concatenate all files
+    #* Concatenate all files
     X_final = np.vstack(all_windows)
     Y_final = np.hstack(all_labels)
 
@@ -185,7 +185,7 @@ def reshape_data_vec(X, Y):
 
 
 def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
-    # Reshape each split
+    #* Reshape each split
     x_train, y_train = reshape_data_vec(X_train, Y_train)
     x_val, y_val = reshape_data_vec(X_val, Y_val)
     x_test, y_test = reshape_data_vec(X_test, Y_test)
@@ -195,7 +195,7 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
     model = build_lstm_model((x_train.shape[1],1,), num_classes)
     model.summary()
 
-    # Callbacks
+    #* Callbacks
     early_stopping = EarlyStopping(
         monitor='val_loss',
         patience=10,
@@ -218,7 +218,7 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
             verbose=1
         )
 
-     # Evaluate on test set
+    #* Evaluate on test set
     test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
     print(f"Test Accuracy: {test_accuracy:.4f}")
     print(f"Test Loss: {test_loss:.4f}")
@@ -227,7 +227,7 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
 
 
 if __name__ == '__main__':
-    #  Some values for testing
+    #*  Some values for testing
     model_config = ModelConfig(
         window_size=200,
         overlap=0.5,
