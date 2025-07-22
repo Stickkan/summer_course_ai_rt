@@ -32,10 +32,10 @@ def get_csv_file_list(dir: str) -> list[str]:
 
 def get_file_data(file_path: str):
     #* df = data file and contains the csv file created earlier.
-    df = pd.read_csv(file_path, sep=' ', header=0) #! Shouldn't sep = ',' since it is a csv file
+    df = pd.read_csv(file_path, sep=' ', header=0) 
 
     signals = []
-    for i in df.columns[0:-1]: #! Maybe skip the -1 i.e. [0:]. Should contain all columns?
+    for i in df.columns[0:-1]: #* Iterates through every column up until (not including) the last column
         #* Appends each column to the signal list
         signals.append(df[i].to_numpy())
 
@@ -57,14 +57,18 @@ def get_multiple_files_data(files: list[str], step: int, window_size: int):
 
 
 def get_majority_label(window):
-    #* Returns a list where the first element holds most common label.
+    #* Returns a list where the first element holds most common label. 
+    #* Usually .most_common() returns a list with a tuple with the most common element as well as the count.
+    #* But with the addition of [0][0] it only returns the first element without count
     return Counter(window).most_common(1)[0][0]
 
 
 def to_windows(signals, step, windows_size, windows_count):
-    #*
+    #* For each element in the windows list is an embedded list (a list within a list). 
+    #* Each list is the window_size and the following element has 50% of the previous values. The overlap is set in the model_config class.
     windows = []
     for i in range(windows_count):
+        #* step = int(model_config.window_size * model_config.overlap) where overlap is set to 0.5 i.e. 50%
         start = i * step
         end = start + windows_size
         window = signals[start:end]
@@ -98,41 +102,14 @@ def process_multiple_files(data, step, config: ModelConfig):
     # combined_X, combined_Y = combine_data(X, Y)
     return X, Y
 
-# def combine_data(X, Y):
-#     combined_X, combined_Y = [[]], []
-#     for i in range(len(X)): # i: int
-#         combined_X[i].extend(X[i])
-#     return combined_X, combined_Y
-
-
-# def process_multiple_files_old(data, step, config: ModelConfig):
-#     processed_data = []
-#     for file_data in data:
-#         X = process_data(
-#             signals=file_data['signals'],
-#             step=step,
-#             windows_count=file_data['windows_count'],
-#             config=config
-#         )
-#         Y = process_labels(
-#             labels=file_data['labels'],
-#             step=step,
-#             windows_count=file_data['windows_count'],
-#             config=config
-#         )
-#         processed_data.append({'X': X, 'Y': Y})  # instead of append
-#         print(f"Processed {len(processed_data)} files")
-#     return processed_data
-
-
 def process_data(signals, step: int, windows_count, config: ModelConfig):
+    #* The upper case 'X' is the list and the lower case 'x' (which is also a list) is the element of upper case 'X'
     X = []
     for val in signals:
         windows = to_windows(signals=val, step=step, windows_size=config.window_size, windows_count=windows_count)
-
         x = []
         for window in windows:
-            x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold))  # POOOP!!
+            x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold)) 
         X.append(x)
     return X
 

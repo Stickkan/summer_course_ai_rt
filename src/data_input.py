@@ -25,7 +25,7 @@ class SensorInput:
 
 
 class FileInput:
-    #! is_done(), has_next() and next() returns a bool... Ask Christopher
+    #* is_done(), has_next() and next() returns a bool. They have not been implemented yet.
 
     def __init__(self, config) -> None:
     #* In __init__ Loads the data from the Ninapro DB4 into the self.data using the numpy library
