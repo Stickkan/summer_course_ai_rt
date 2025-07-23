@@ -238,18 +238,19 @@ def save_config(model_config: ModelConfig, model_path: str, config_path: str, ou
 if __name__ == '__main__':
     #*  Some values for testing
     model_config = ModelConfig(
-        window_size=400,
-        overlap=0.5,
+        window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
+        overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
         fs=0,
-        lowcut=20,
-        highcut=450,
+        lowcut=20, #? This is too high cutoff frequency for a highpass filter. Recommend to lower it to around 5.
+        highcut=450, #? This is also to high I would say.
+        # TODO: Might want to include a band-stop filter for the 50 hz (+- 2 hz).
         filter_order=4,
-        wamp_threshold=0.02,
+        wamp_threshold=0.02, #* Mess around with this. A lower value makes the feature more susceptible to noise.
         features=['mav', 'wl', 'wamp', 'mavs']
     )
 
     f_name = 'ninapro_DB4_4_emg'
-    input_dir = os.path.join('data', 'DB4_prepared')  # Folder to glob
+    input_dir = os.path.join('data', 'DB4_prepared')  #* Folder to glob
     output_dir = os.path.join("model", f_name)
     pkl_path = os.path.join(output_dir, f_name  + '.pkl')
     model_path = os.path.join(output_dir, f_name + '.keras')

@@ -7,15 +7,14 @@ from logger import Logger
 
 
 class PreProcessor:
-    """
-    Preprocessor class for processing EMG data.
-    This class provides methods for preprocessing EMG data, including windowing and normalization.
-    """
+    #* Preprocessor class for processing EMG data.
+    #* This class provides methods for preprocessing EMG data, including windowing and normalization.
+    
 
     def __init__(self, data_source: FileInput | SensorInput, config: Config, log_fn) -> None:
         self.data_source = data_source
         self.config = config
-        self.buffer = deque(maxlen=config.pre_proc_buffer_len) # Buffer's depth, 2 is fine
+        self.buffer = deque(maxlen=config.pre_proc_buffer_len) #* Buffer's depth, 2 is fine
         self.finalized_data = deque(maxlen=config.windows_count)
         self.step = round(config.window_size * config.window_overlap)
         self.index = 0
@@ -30,22 +29,22 @@ class PreProcessor:
             self.finalized_data.append(window)
 
         f_data = np.array(self.finalized_data, dtype=np.float32)
-        self.finalized_data.popleft()  # Reset for next batch
+        self.finalized_data.popleft()  #* Reset for next batch
         
         return np.array([f_data.flatten()])
 
 
     def _get_next_window(self):
-        # Fill buffer first
+        #* Fill buffer first
         while len(self.buffer) < self.config.pre_proc_buffer_len:
-            if self.data_source.has_next():  # non-blocking, busy-wait
+            if self.data_source.has_next():  #* non-blocking, busy-wait
                 next_window = self.data_source.next()
 
                 if self.log_fn is not None:
-                    self.log_fn(next_window)  # Save input data to log
+                    self.log_fn(next_window)  #* Save input data to log
                 self.buffer.append(next_window)  # TODO: Decide where to filter, here or in process_window?
 
-            if self.data_source.is_done(): # If no more input then stop
+            if self.data_source.is_done(): #* If no more input then stop
                 return None
 
         window = np.array(self.buffer, dtype=np.float32).flatten()[self.index:self.index+self.config.window_size]
@@ -61,7 +60,7 @@ class PreProcessor:
 
 
     def _process_window(self, window: np.ndarray) -> np.ndarray | None:
-        if (len(self.config.features) == 0):  # No feature extraction
+        if (len(self.config.features) == 0):  #* No feature extraction
             return window
 
         window = np.array(window)
