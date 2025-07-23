@@ -149,7 +149,7 @@ def build_lstm_model(input_shape, num_classes): #? the argument num_classes is n
 
 def pre_process(input_dir: str, output_dir: str, output_file: str, config: ModelConfig): #? the argument output_dir is not used. Is it there as a placeholder for future use?
     input_files = get_csv_file_list(input_dir)  #* Get csv files globbed (globbed = popular library)
-    step = int(model_config.window_size * model_config.overlap)
+    step = int(model_config.window_size * model_config.window_overlap)
     test_data = get_multiple_files_data(files=input_files, step=step, window_size=config.window_size)
     processed_test_data = process_multiple_files(data=test_data, step=step, config=config)
 
