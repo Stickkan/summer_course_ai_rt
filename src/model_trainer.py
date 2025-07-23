@@ -18,7 +18,7 @@ import toml
 class ModelConfig:
 #* Similar to a struct in C. Specifies type for each variable.
     window_size: int
-    overlap: float
+    window_overlap: float
     fs: int
     lowcut: int
     highcut: int
@@ -34,7 +34,7 @@ def get_csv_file_list(dir: str) -> list[str]:
 
 def get_file_data(file_path: str):
     #* df = data file and contains the csv file created earlier.
-    df = pd.read_csv(file_path, sep=' ', header=0) 
+    df = pd.read_csv(file_path, sep=' ', header=0)
 
     signals = []
     for i in df.columns[0:-1]: #* Iterates through every column up until (not including) the last column
@@ -59,14 +59,14 @@ def get_multiple_files_data(files: list[str], step: int, window_size: int):
 
 
 def get_majority_label(window):
-    #* Returns the most common label. 
+    #* Returns the most common label.
     #* Usually .most_common() returns a list with a tuple with the most common element as well as the count.
     #* But with the addition of [0][0] it only returns the first element without count. The type is set automatically (as usual for python).
     return Counter(window).most_common(1)[0][0]
 
 
 def to_windows(signals, step, windows_size, windows_count):
-    #* For each element in the windows list is an embedded list (a list within a list). 
+    #* For each element in the windows list is an embedded list (a list within a list).
     #* Each list is the window_size and the following element has 50% of the previous values. The overlap is set in the model_config class.
     windows = []
     for i in range(windows_count):
@@ -111,7 +111,7 @@ def process_data(signals, step: int, windows_count, config: ModelConfig):
         windows = to_windows(signals=val, step=step, windows_size=config.window_size, windows_count=windows_count)
         x = []
         for window in windows:
-            x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold)) 
+            x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold))
         X.append(x)
     return X
 
@@ -139,7 +139,7 @@ def build_lstm_model(input_shape, num_classes): #? the argument num_classes is n
             Normalization(),
             LSTM(32, unroll=True),
             Dense(6, activation='relu'),
-            Dense(6, activation='softmax') #* Different activation functions for each layer 
+            Dense(6, activation='softmax') #* Different activation functions for each layer
         ]
     )
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -230,7 +230,7 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
 def save_config(model_config: ModelConfig, model_path: str, config_path: str, output_states: list[int]) -> None:
     config = toml.dumps(model_config.__dict__)
     config += f"model_path = '{model_path}'"
-    
+
     with open(config_path, 'w') as f:
         f.write(config)
 
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     #*  Some values for testing
     model_config = ModelConfig(
         window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
-        overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
+        window_overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
         fs=0,
         lowcut=20, #? This is too high cutoff frequency for a highpass filter. Recommend to lower it to around 5.
         highcut=450, #? This is also to high I would say.
