@@ -19,12 +19,18 @@ class ModelConfig:
 #* Similar to a struct in C. Specifies type for each variable.
     window_size: int
     window_overlap: float
+    sampling_freq: int
+    normalization: str
     fs: int
     lowcut: int
     highcut: int
     filter_order: int
     wamp_threshold: float
     features: list[str]
+    model_path: str
+    log_path: str
+    model_states: list[int]
+    input_file_path: str
 
 
 def get_csv_file_list(dir: str) -> list[str]:
@@ -132,14 +138,14 @@ def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): #? Why not use the entire 
     return (X_train, Y_train), (X_val, Y_val), (X_test, Y_test)
 
 
-def build_lstm_model(input_shape, num_classes): #? the argument num_classes is not used. Is it there as a placeholder for future use?
+def build_lstm_model(input_shape, num_classes): 
     model = Sequential(
         [
             InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
-            Normalization(),
+            # Normalization(),
             LSTM(32, unroll=True),
             Dense(6, activation='relu'),
-            Dense(6, activation='softmax') #* Different activation functions for each layer
+            Dense(num_classes, activation='softmax') #* Different activation functions for each layer
         ]
     )
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
@@ -227,35 +233,43 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
 
     return model, history
 
-def save_config(model_config: ModelConfig, model_path: str, config_path: str, output_states: list[int]) -> None:
+def save_config(model_config: ModelConfig, config_path: str) -> None:
     config = toml.dumps(model_config.__dict__)
-    config += f"model_path = '{model_path}'"
 
     with open(config_path, 'w') as f:
         f.write(config)
 
 
 if __name__ == '__main__':
+
+    f_name = 'DB4_prepared_4_states'
+    
+    input_dir = os.path.join('data', f_name)  #* Folder to glob
+    output_dir = os.path.join("model", f_name)
+    
+    pkl_path = os.path.join(output_dir, f_name  + '.pkl')
+    model_path = os.path.join(output_dir, f_name + '.keras')
+    config_path = os.path.join(output_dir, f_name  + '.toml')
+    log_path = os.path.join(output_dir, 'output', 'inference.csv')  # Path for log-file during inference
+    training_history_path = os.path.join(output_dir, f_name + '_training_history.pkl')
+
     #*  Some values for testing
     model_config = ModelConfig(
         window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
         window_overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
+        sampling_freq=2000,  # Sampling freq of recorded data, for filtering
+        normalization="None",  # Normalization to be applied, TODO: Might want to include a band-stop filter for the 50 hz (+- 2 hz).
         fs=0,
         lowcut=20, #? This is too high cutoff frequency for a highpass filter. Recommend to lower it to around 5.
         highcut=450, #? This is also to high I would say.
-        # TODO: Might want to include a band-stop filter for the 50 hz (+- 2 hz).
         filter_order=4,
         wamp_threshold=0.02, #* Mess around with this. A lower value makes the feature more susceptible to noise.
-        features=['mav', 'wl', 'wamp', 'mavs']
+        features=['mav', 'wl', 'wamp', 'mavs'],
+        model_path=model_path,
+        log_path=log_path,
+        model_states=[],
+        input_file_path=""
     )
-
-    f_name = 'ninapro_DB4_4_emg'
-    input_dir = os.path.join('data', 'DB4_prepared')  #* Folder to glob
-    output_dir = os.path.join("model", f_name)
-    pkl_path = os.path.join(output_dir, f_name  + '.pkl')
-    model_path = os.path.join(output_dir, f_name + '.keras')
-    training_history_path = os.path.join(output_dir, f_name + '_training_history.pkl')
-    config_path = os.path.join(output_dir, f_name  + '.toml')
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -267,9 +281,15 @@ if __name__ == '__main__':
         print("Pre-processing from csv-files")
         X, Y = pre_process(input_dir, output_dir, pkl_path, model_config)
 
+    # Reshape data
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = split_data(X, Y)
-    output_states = np.unique_values(Y).tolist()
-    model, history = train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(np.unique_values(Y)))
+    model_config.model_states = np.unique_values(Y).tolist()
+    print(model_config.model_states)
+    
+    # Train model
+    model, history = train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(model_config.model_states))
+    
+    # Save everything
     model.save(model_path)
     joblib.dump(history.history, training_history_path)
-    save_config(model_config, model_path, config_path, output_states)
+    save_config(model_config, config_path)

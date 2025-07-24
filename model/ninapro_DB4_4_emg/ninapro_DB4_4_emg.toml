@@ -1,9 +1,13 @@
 window_size = 400
-overlap = 0.5
+window_overlap = 0.5
+sampling_freq = 2000
+normalization = "None"
 fs = 0
 lowcut = 20
 highcut = 450
 filter_order = 4
 wamp_threshold = 0.02
 features = [ "mav", "wl", "wamp", "mavs",]
-model_path = 'model/ninapro_DB4_4_emg/ninapro_DB4_4_emg.keras'
+model_path = "model/ninapro_DB4_4_emg/ninapro_DB4_4_emg.keras"
+model_states = [ 0, 1, 2, 3,]
+input_file_path = ""

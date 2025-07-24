@@ -19,9 +19,9 @@ def get_data_input(config: Config, type='file'):
 
 
 if __name__ == '__main__':
-    model_name = 'ninapro_DB4_4_emg'
+    model_name = 'DB4_prepared_4_states'
     config = get_config(file_path=os.path.join('model', model_name))  # TODO: update so model_trainer outputs the same schema
-    logger = Logger(os.path.join('model', model_name, 'log', 'output.csv'), config.model_states)
+    logger = Logger(path=config.log_path, state_header=config.model_states)
     data_input = get_data_input(config=config, type='file')
     pre_process = PreProcessor(config=config, data_source=data_input, log_fn=logger.log_input_data)
     model = Model(model_path=config.model_path, logger=logger.log_output_data)

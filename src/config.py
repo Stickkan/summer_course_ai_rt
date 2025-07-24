@@ -5,15 +5,20 @@ from dataclasses import dataclass
 @dataclass
 class Config:
 #* Similar to a struct in C. Specifies the type for each variable
-    emg_file_path: str
     window_size: int
     window_overlap: float
     sampling_freq: int
     normalization: str
-    pre_proc_buffer_len: int
+    fs: int
+    lowcut: int
+    highcut: int
+    filter_order: int
+    wamp_threshold: float
     features: list[str]
     model_path: str
+    log_path: str
     model_states: list[int]
+    input_file_path: str
 
 def get_config(file_path: str) -> Config:
 #* Open the file in read mode and then unpacking contents using toml.
