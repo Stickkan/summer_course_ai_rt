@@ -9,10 +9,11 @@
 
 ## model_trainer:
 - Loads in data from .csv-files
-- Reshapes data
+- Uses `data_shaper` for reshaping input data
 - Trains model
 - Saves model and .toml-file used for configuration
-  * The toml-file is considered the single source of truth!
+  * The toml-file is considered the single source of truth
+- Uses `ModelConfig` for model/training parameters
 
  ## pre_processor
 - Receives raw data input (e.g., from sensors or files)
@@ -31,6 +32,12 @@
 - Provides configuration parameters to other modules
 - Ensures consistency and single source of truth for settings
 
-## utils - logger, feature_extraction
-- Contains helper functions for data manipulation, logging, and error handling
+## model_config
+- Contains the `ModelConfig` dataclass specifying model/training parameters
+- Used by both training and inference modules for consistent configuration
+
+## utils - logger, feature_extraction, data_shaper
+- `logger`: Handles logging of input/output data and states
+- `feature_extraction`: Contains feature computation functions for EMG data
+- `data_shaper`: Dedicated module for shaping and preparing input data for training/inference
 - Used across multiple modules to avoid code duplication
