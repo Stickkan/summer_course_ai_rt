@@ -5,13 +5,12 @@ from collections import Counter
 from sklearn.model_selection import train_test_split
 
 from feature_extraction import extract_features
-from model_config import ModelConfig
+from config import Config
 
 
 
-def get_csv_file_list(dir: str) -> list[str]:
-    files = glob.glob(dir + "/*.csv")
-    return files
+def get_csv_file_list(dir: str) -> list[str]:   
+    return glob.glob(dir + "/*.csv")
 
 
 def get_file_data(file_path: str):
@@ -62,7 +61,7 @@ def to_windows(signals, step, windows_size, windows_count):
 
 
 # TODO: Flatten output one level; func returns nested list with every file as a sep. list
-def process_multiple_files(data, step, config: ModelConfig):
+def process_multiple_files(data, step, config: Config):
     i = 0
     X, Y = [], []
     for file_data in data:
@@ -87,7 +86,7 @@ def process_multiple_files(data, step, config: ModelConfig):
     return X, Y
 
 
-def process_data(signals, step: int, windows_count, config: ModelConfig):
+def process_data(signals, step: int, windows_count, config: Config):
     #* The upper case 'X' is the list and the lower case 'x' (which is also a list) is the element of upper case 'X'
     X = []
     for val in signals:
@@ -96,19 +95,21 @@ def process_data(signals, step: int, windows_count, config: ModelConfig):
         for window in windows:
             x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold))
         X.append(x)
+        
     return X
 
 
-def process_labels(labels, step: int, windows_count, config: ModelConfig) -> list[int]:
+def process_labels(labels, step: int, windows_count, config: Config) -> list[int]:
     windowed_labels = to_windows(signals=labels, step=step, windows_size=config.window_size, windows_count=windows_count)
     #? is the name of the variable 'windowed_labels' suitable. to_windows() returns a list within a list with the overlapped data.
     Y = []
     for w in windowed_labels:
         Y.append(get_majority_label(w))
+        
     return Y
 
 
-def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): #? Why not use the entire dataset? 0.7 + 0.2 = 0.9
+def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): # val_ratio split: (val + test) => (0.2 + 0.1)
     X_train, X_temp, Y_train, Y_temp = train_test_split(X, Y, train_size=train_ratio, random_state=42)  #* Training and combined validation and test
     X_val, X_test, Y_val, Y_test = train_test_split(X_temp, Y_temp, test_size=val_ratio, random_state=42)  #* Split up validation and test
 
@@ -116,8 +117,8 @@ def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): #? Why not use the entire 
     
 
 def reshape_data_vec(X, Y):
-    #* Vectorized version of the reshaping function
-
+    #* Vectorized version of the reshaping function 
+    
     all_windows = []
     all_labels = []
 
@@ -141,7 +142,7 @@ def reshape_data_vec(X, Y):
     return X_final, Y_final
 
     
-def pre_process(input_dir: str, output_file: str, config: ModelConfig):
+def pre_process(input_dir: str, output_file: str, config: Config):
     input_files = get_csv_file_list(input_dir)  #* Get csv files globbed (globbed = popular library)
     step = int(config.window_size * config.window_overlap)
     test_data = get_multiple_files_data(files=input_files, step=step, window_size=config.window_size)

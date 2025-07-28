@@ -25,7 +25,13 @@ def get_config(file_path: str) -> Config:
         config_data = toml.load(f)
         return Config(**config_data) # Unpack contents of toml
 
+def save_config(model_config: Config, config_path: str) -> None:
+    config = toml.dumps(model_config.__dict__)
 
+    with open(config_path, 'w') as f:
+        f.write(config)
+        
+        
 
 if __name__ == "__main__":
 #* Main function

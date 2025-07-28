@@ -3,7 +3,9 @@ import glob, os, joblib, toml
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, InputLayer, Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from model_config import ModelConfig
+import tensorflow as tf
+import matplotlib.pyplot as plt
+from config import Config, save_config
 import data_shaper
 
 
@@ -65,11 +67,31 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
     return model, history
 
 
-def save_config(model_config: ModelConfig, config_path: str) -> None:
-    config = toml.dumps(model_config.__dict__)
+def convert_keras_to_tflite(keras_model, output_path):
+    # Convert the model.
+    converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
+    converter.experimental_new_converter = True
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
+    tflite_model = converter.convert()
+    return tflite_model
+       
+        
+def save_tflite_model(model, output_path):
+    tflite_model = convert_keras_to_tflite(model, output_path)
+    
+    with open(output_path, 'wb') as f:
+        f.write(tflite_model)
 
-    with open(config_path, 'w') as f:
-        f.write(config)
+
+def plot_training_history(history, output_path):
+    plt.figure(figsize=(10, 6))
+    plt.plot(history['loss'], label='Training Loss')
+    plt.plot(history['val_loss'], label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(output_path)
+    plt.close()
 
 
 if __name__ == '__main__':
@@ -81,12 +103,13 @@ if __name__ == '__main__':
 
     pkl_path = os.path.join(output_dir, f_name  + '.pkl')
     model_path = os.path.join(output_dir, f_name + '.keras')
+    tflite_model_path = os.path.join(output_dir, f_name + '.tflite')
     config_path = os.path.join(output_dir, f_name  + '.toml')
     log_path = os.path.join(output_dir, 'output', 'inference.csv')  # Path for log-file during inference
     training_history_path = os.path.join(output_dir, f_name + '_training_history.pkl')
 
     #*  Some values for testing
-    model_config = ModelConfig(
+    model_config = Config(
         window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
         window_overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
         sampling_freq=2000,  # Sampling freq of recorded data, for filtering
@@ -97,10 +120,10 @@ if __name__ == '__main__':
         filter_order=4,
         wamp_threshold=0.02, #* Mess around with this. A lower value makes the feature more susceptible to noise.
         features=['mav', 'wl', 'wamp', 'mavs'],
-        model_path=model_path,
+        model_path=tflite_model_path,
         log_path=log_path,
         model_states=[],
-        input_file_path=""
+        input_file_path=f"{os.path.join('data', f_name, 'test_data.pkl')}"
     )
 
     if not os.path.exists(output_dir):
@@ -124,7 +147,11 @@ if __name__ == '__main__':
     # Save everything
     model.save(model_path)
     joblib.dump(history.history, training_history_path)
+    save_tflite_model(model, tflite_model_path)
     save_config(model_config, config_path)
 
-    # save X_val and Y_val
-    joblib.dump((X_val, Y_val), os.path.join('data/DB4_prepared_4_states/', "val_data.pkl"))
+    # save X_test and Y_test
+    joblib.dump((X_test, Y_test), os.path.join('data/DB4_prepared_4_states/', "test_data.pkl"))
+
+    # save plot of training history
+    plot_training_history(history.history, os.path.join(output_dir, 'training_history.png'))
