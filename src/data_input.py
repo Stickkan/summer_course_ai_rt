@@ -12,7 +12,7 @@ class SensorInput:
         pass
 
 
-    def is_done(self):
+    def is_done(self) -> bool:
         return False
 
 
@@ -68,7 +68,7 @@ def get_input_handle(type: str, config: Config | None) -> SensorInput | FileInpu
     #* The -> operator specifies which return type SHOULD be returned.
     #* Depending on the input ('sensor' or 'file') a SensorInput class or FileInput class is returned.
     if type == 'sensor':
-        return SensorInput()
+        return SensorInput(config)
     elif type == 'file':
         return FileInput(config)
     else:
