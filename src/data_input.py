@@ -33,7 +33,7 @@ class FileInput:
             raise ValueError('No config provided')
 
         self.X, self.Y = joblib.load(config.input_file_path)
-        self.data = np.array(self.X[0])
+        self.data = np.array(self.X[0], dtype=np.float32)
         self.it = 0
         self.data_len = len(self.data[0])
         self.window_size = config.window_size
@@ -53,7 +53,7 @@ class FileInput:
             for ft in self.data:
                 window.extend(ft[self.it])
             self.it += 1
-            return np.array(window)
+            return np.array(window, dtype=np.float32).reshape((1, len(window), 1))
         except Exception:
             return None
 

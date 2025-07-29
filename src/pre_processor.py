@@ -13,10 +13,18 @@ class NoPreProcessor:
     def __init__(self, data_source: FileInput, config: Config, log_fn):
         self.config = config
         self.data_source = data_source
+        self.log_fn = log_fn
         
         
     def get_next(self) -> np.ndarray | None:
-        return self.data_source.next()
+        if self.data_source.has_next():
+            next_window = self.data_source.next()
+            
+            if self.log_fn is not None:
+                self.log_fn(next_window)
+            return next_window
+        else:
+            return None
 
 
 class PreProcessor:
@@ -105,10 +113,10 @@ class PreProcessor:
         return np.array(normalized_features, dtype=np.float32)
         
         
-def get_pre_processor(data_source: SensorInput | FileInput, config: Config, log_fn) -> PreProcessor | NoPreProcessor:
-    if data_source is FileInput:
-        return NoPreProcessor(data_source, config)
-    elif data_source is SensorInput:
+def get_pre_processor(data_source, config: Config, log_fn) -> PreProcessor | NoPreProcessor:
+    if data_source.__class__ is FileInput:
+        return NoPreProcessor(data_source, config, log_fn)
+    elif data_source.__class__ is SensorInput:
         return PreProcessor(data_source, config, log_fn)
     else:
         raise ValueError("Invalid pre-processor type")
