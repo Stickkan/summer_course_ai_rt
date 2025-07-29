@@ -99,6 +99,12 @@ def process_data(signals, step: int, windows_count, config: Config):
     return X
 
 
+def get_global_meanstd(signal):
+    mean = np.mean(signal)
+    std = np.std(signal)
+    return mean, std
+
+
 def process_labels(labels, step: int, windows_count, config: Config) -> list[int]:
     windowed_labels = to_windows(signals=labels, step=step, windows_size=config.window_size, windows_count=windows_count)
     #? is the name of the variable 'windowed_labels' suitable. to_windows() returns a list within a list with the overlapped data.

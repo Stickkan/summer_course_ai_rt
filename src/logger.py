@@ -2,12 +2,12 @@ import numpy
 
 
 class Logger:
-    def __init__(self, path='output/output.csv', state_header = ['a', 'b', 'c']) -> None:
+    def __init__(self, path='output/output.csv', state_header: list[int] = [0, 1, 2, 3]) -> None:
     #* saves path, opens the file in write mode, creates an empty list as buffer and WHAT?!
         self.path = path
         self.file = open(self.path, 'w')
         self.buffer = []
-        self.file.write(f"time, input_data, output_state, {', '.join(state_header)}\n")
+        self.file.write(f"time, input_data, output_state, {', '.join(map(str, state_header))}\n")
 
 
     def __del__(self) -> None:

@@ -6,7 +6,7 @@ import time
 
 class Model:
     def __init__(self, model_path: str, logger=None):
-        # self.interpreter = tf.Interpreter(model_path=model_path)
+        # self.interpreter = tf.interpreter(model_path=model_path)
         self.interpreter = tf.lite.Interpreter(model_path=model_path)
         self.interpreter.allocate_tensors()
         self.input_details = self.interpreter.get_input_details()

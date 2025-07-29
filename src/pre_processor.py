@@ -90,4 +90,6 @@ class PreProcessor:
         #     normalized_feature = (feature - mean) / std
         #     normalized_features.append(normalized_feature)
 
+        # return np.array(normalized_features, dtype=np.float32)
         return np.array(normalized_features, dtype=np.float32)
+        

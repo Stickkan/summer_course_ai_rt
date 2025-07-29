@@ -1,5 +1,5 @@
 import threading
-import queue
+import queue, joblib
 import numpy as np
 from config import Config
 
@@ -7,6 +7,7 @@ from config import Config
 # is identical so as to be interchangeable
 
 class SensorInput:
+    #* is_done(), has_next() and next() returns a bool. They have not been implemented yet.
 
     def __init__(self, config) -> None:
         pass
@@ -25,40 +26,34 @@ class SensorInput:
 
 
 class FileInput:
-    #* is_done(), has_next() and next() returns a bool. They have not been implemented yet.
 
     def __init__(self, config) -> None:
     #* In __init__ Loads the data from the Ninapro DB4 into the self.data using the numpy library
         if config is None:
             raise ValueError('No config provided')
 
-        self.data = np.loadtxt(config.emg_file_path, delimiter=",", dtype=np.float32)[:,1]
+        self.X, self.Y = joblib.load(config.input_file_path)
+        self.data = np.array(self.X[0])
+        self.it = 0
+        self.data_len = len(self.data[0])
         self.window_size = config.window_size
 
 
-    def _pop_front(self, array, n=200):
-    #* _pop_front() the first n elements from the array and return them as a new array.
-    #* Borrowed from Ludwig Bogsveen
-        if len(array) < n:
-            raise ValueError("Not enough elements to pop.")
-
-        front = array[:n]
-        array = array[n:]  # new view
-        return front, np.array(array, dtype=np.float32)
-
-
-    def is_done(self):
-        return self.has_next
+    def is_done(self) -> bool:
+        return not self.has_next()
 
 
     def has_next(self) -> bool:
-        return self.data.shape[0] > 0
+        return self.it < self.data_len
 
 
     def next(self) -> np.ndarray | None:
+        window = []
         try:
-            window, self.data = self._pop_front(self.data, n=self.window_size)
-            return window
+            for ft in self.data:
+                window.extend(ft[self.it])
+            self.it += 1
+            return np.array(window)
         except Exception:
             return None
 
