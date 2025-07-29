@@ -7,12 +7,23 @@ from feature_extraction import extract_features
 from logger import Logger
 
 
+
+class NoPreProcessor:
+    
+    def __init__(self, data_source: FileInput, config: Config, log_fn):
+        self.config = config
+        self.data_source = data_source
+        
+        
+    def get_next(self) -> np.ndarray | None:
+        return self.data_source.next()
+
+
 class PreProcessor:
     #* Preprocessor class for processing EMG data.
     #* This class provides methods for preprocessing EMG data, including windowing and normalization.
 
-
-    def __init__(self, data_source: FileInput | SensorInput, config: Config, log_fn) -> None:
+    def __init__(self, data_source: SensorInput, config: Config, log_fn) -> None:
         self.pre_proc_buffer_len = 2
         self.data_source = data_source
         self.config = config
@@ -93,3 +104,11 @@ class PreProcessor:
         # return np.array(normalized_features, dtype=np.float32)
         return np.array(normalized_features, dtype=np.float32)
         
+        
+def get_pre_processor(data_source: SensorInput | FileInput, config: Config, log_fn) -> PreProcessor | NoPreProcessor:
+    if data_source is FileInput:
+        return NoPreProcessor(data_source, config)
+    elif data_source is SensorInput:
+        return PreProcessor(data_source, config, log_fn)
+    else:
+        raise ValueError("Invalid pre-processor type")

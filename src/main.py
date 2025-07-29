@@ -1,6 +1,6 @@
 import os, time
 from config import get_config, Config
-from pre_processor import PreProcessor
+from pre_processor import PreProcessor, NoPreProcessor, get_pre_processor
 from data_input import FileInput, SensorInput
 from logger import Logger
 from model_loader import Model
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml")) 
     data_input = get_data_input(config=config, type='file')
     logger = Logger(path=config.log_path, state_header=config.model_states)
-    pre_process = PreProcessor(config=config, data_source=data_input, log_fn=logger.log_input_data)
+    pre_process = get_pre_processor(config=config, data_source=data_input, log_fn=logger.log_input_data)
     model = Model(model_path=config.model_path, logger=logger.log_output_data)
     
     start_time = time.time()
