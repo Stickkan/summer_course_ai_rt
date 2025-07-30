@@ -19,22 +19,22 @@ def get_data_input(config: Config, type='file'):
 
 
 if __name__ == '__main__':
-    
-    model_name = 'DB4_prepared_4_states'
-    
-    config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml")) 
+
+    model_name = 'LSTM_DB4_prepared_4_states'
+
+    config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml"))
     data_input = get_data_input(config=config, type='file')
     logger = Logger(path=config.log_path, state_header=config.model_states)
     pre_process = get_pre_processor(config=config, data_source=data_input, log_fn=logger.log_input_data)
     model = Model(model_path=config.model_path, logger=logger.log_output_data)
-    
+
     start_time = time.time()
-    
+
     while True:
         window = pre_process.get_next()
-        
+
         if window is None:
             break
-            
+
         output_state = model.get_output_state(window)
         logger.log_input_data(output_state)  # Saves input data

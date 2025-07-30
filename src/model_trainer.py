@@ -1,7 +1,7 @@
 import numpy as np
 import glob, os, joblib, toml
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, InputLayer, Normalization
+from tensorflow.keras.layers import LSTM, GRU, Dense, InputLayer, Normalization
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -25,7 +25,22 @@ def build_lstm_model(input_shape, num_classes):
     return model
 
 
-def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
+def build_gru_model(input_shape, num_classes):
+    model = Sequential(
+        [
+            InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
+            # Normalization(),
+            GRU(32, unroll=True),
+            Dense(6, activation='relu'),
+            Dense(num_classes, activation='softmax') #* Different activation functions for each layer
+        ]
+    )
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    return model
+
+
+def train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
     #* Reshape each split
     x_train, y_train = data_shaper.reshape_data_vec(X_train, Y_train)
     x_val, y_val = data_shaper.reshape_data_vec(X_val, Y_val)
@@ -33,7 +48,14 @@ def train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, num_classes):
 
     print(f"Model input shape: {x_train.shape}")
     print(f"Model output shape: {y_train.shape}")
-    model = build_lstm_model((x_train.shape[1],1,), num_classes)
+
+    if model_type == 'GRU':
+        model = build_gru_model((x_train.shape[1],1,), num_classes)
+    elif model_type == 'LSTM':
+        model = build_lstm_model((x_train.shape[1],1,), num_classes)
+    else:
+        raise ValueError(f"Invalid model type: {model_type}")
+
     model.summary()
 
     #* Callbacks
@@ -74,11 +96,11 @@ def convert_keras_to_tflite(keras_model, output_path):
     converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS, tf.lite.OpsSet.SELECT_TF_OPS]
     tflite_model = converter.convert()
     return tflite_model
-       
-        
+
+
 def save_tflite_model(model, output_path):
     tflite_model = convert_keras_to_tflite(model, output_path)
-    
+
     with open(output_path, 'wb') as f:
         f.write(tflite_model)
 
@@ -96,9 +118,13 @@ def plot_training_history(history, output_path):
 
 if __name__ == '__main__':
 
-    f_name = 'DB4_prepared_4_states'
+    # Model type, LSTM or GRU
+    model_type = 'LSTM' 
 
-    input_dir = os.path.join('data', f_name)  #* Folder to glob
+    f_name = model_type + '_DB4_prepared_4_states'
+    data_name= 'DB4_prepared_4_states'
+
+    input_dir = os.path.join('data', data_name)  #* Folder to glob
     output_dir = os.path.join("model", f_name)
 
     pkl_path = os.path.join(output_dir, f_name  + '.pkl')
@@ -127,7 +153,7 @@ if __name__ == '__main__':
     )
 
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+        os.makedirs(os.path.join(output_dir, 'output'))
 
     if os.path.exists(pkl_path):
         print("Loading data from file")
@@ -142,7 +168,7 @@ if __name__ == '__main__':
     print(model_config.model_states)
 
     # Train model
-    model, history = train_model(X_train, Y_train, X_val, Y_val, X_test, Y_test, len(model_config.model_states))
+    model, history = train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, len(model_config.model_states))
 
     # Save everything
     model.save(model_path)
