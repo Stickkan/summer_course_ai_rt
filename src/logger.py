@@ -1,4 +1,4 @@
-import numpy
+import numpy, time
 
 
 class Logger:
@@ -7,7 +7,8 @@ class Logger:
         self.path = path
         self.file = open(self.path, 'w')
         self.buffer = []
-        self.file.write(f"time, input_data, output_state, {', '.join(map(str, state_header))}\n")
+        self.file.write(f"Current time, Inference time, Input data, Chosen output state, {', '.join(map(str, state_header))}\n")
+        self.start_time = time.time()
 
 
     def __del__(self) -> None:
@@ -16,22 +17,14 @@ class Logger:
         print(f"Logger closed at {self.path}")
 
 
-    def log_input_data(self, input_data) -> None:
-    #* Buffer input data because output from model is gathered later
-        self.buffer.extend(input_data)
 
+    def log(self, input_data: list[float], output_data: numpy.ndarray, inference_time) -> None:
+        current_time = time.time() - self.start_time
+        output_state = output_data.tolist().index(max(output_data))  # shadowing
+        input_data_str = ', '.join(map(str, input_data)).replace('[', '').replace(']', '').replace('.,', ',')
+        output_data_str = ', '.join(map(str, output_data))
 
-    #* Input data is a 1D numpy array of raw input data
-    #* Output data is a 1D numpy array of percentage values
-    def log_output_data(self, output_data, time) -> None:
-        input_data = self.buffer
-        self.buffer = []
-        output_data = output_data.tolist()
+        output_str = f"{current_time}, {inference_time}, {input_data_str}, {output_state}, {output_data_str}\n"
 
-        output_state = [output_data.index(max(output_data))] * len(input_data)
-        output_data = [output_data] * len(input_data)
-        _time = [time] * len(input_data)
-
-        for t, i, s, o in zip(_time, input_data, output_state, output_data):
-            self.file.write(f"{t}, {i}, {s}, {','.join(map(str, o))}\n")
+        self.file.write(output_str)
         self.file.flush()

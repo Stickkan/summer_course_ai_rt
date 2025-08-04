@@ -25,10 +25,10 @@ if __name__ == '__main__':
     config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml"))
     data_input = get_data_input(config=config, type='file')
     logger = Logger(path=config.log_path, state_header=config.model_states)
-    pre_process = get_pre_processor(config=config, data_source=data_input, log_fn=logger.log_input_data)
-    model = Model(model_path=config.model_path, logger=logger.log_output_data)
+    pre_process = get_pre_processor(config=config, data_source=data_input, log_fn=None)  # logger.log_input_data
+    model = Model(model_path=config.model_path, logger=None)  # logger.log_output_data
 
-    start_time = time.time()
+    # start_time = time.time()
 
     while True:
         window = pre_process.get_next()
@@ -36,5 +36,8 @@ if __name__ == '__main__':
         if window is None:
             break
 
+        inference_start_time = time.perf_counter()
         output_state = model.get_output_state(window)
-        logger.log_input_data(output_state)  # Saves input data
+        inference_end_time = time.perf_counter() - inference_start_time
+
+        logger.log(window[0], output_state, inference_end_time)  # Saves input data

@@ -119,7 +119,8 @@ def plot_training_history(history, output_path):
 if __name__ == '__main__':
 
     # Model type, LSTM or GRU
-    model_type = 'LSTM' 
+    model_type = 'GRU'
+
 
     f_name = model_type + '_DB4_prepared_4_states'
     data_name= 'DB4_prepared_4_states'
@@ -149,7 +150,7 @@ if __name__ == '__main__':
         model_path=tflite_model_path,
         log_path=log_path,
         model_states=[],
-        input_file_path=f"{os.path.join('data', f_name, 'test_data.pkl')}"
+        input_file_path=f"{os.path.join('data', data_name, 'test_data.pkl')}"
     )
 
     if not os.path.exists(output_dir):

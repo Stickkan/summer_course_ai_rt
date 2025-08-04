@@ -11,4 +11,4 @@ features = [ "mav", "wl", "wamp", "mavs",]
 model_path = "model/LSTM_DB4_prepared_4_states/LSTM_DB4_prepared_4_states.tflite"
 log_path = "model/LSTM_DB4_prepared_4_states/output/inference.csv"
 model_states = [ 0, 1, 2, 3,]
-input_file_path = "data/LSTM_DB4_prepared_4_states/test_data.pkl"
+input_file_path = "data/DB4_prepared_4_states/test_data.pkl"
