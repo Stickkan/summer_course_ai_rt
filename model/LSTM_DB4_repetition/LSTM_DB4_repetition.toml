@@ -1,0 +1,14 @@
+window_size = 400
+window_overlap = 0.5
+sampling_freq = 2000
+normalization = "None"
+fs = 0
+lowcut = 20
+highcut = 450
+filter_order = 4
+wamp_threshold = 0.02
+features = [ "mav", "wl", "wamp", "mavs",]
+model_path = "model/LSTM_DB4_repetition/LSTM_DB4_repetition.tflite"
+log_path = "model/LSTM_DB4_repetition/output/inference.csv"
+model_states = [ 0, 1, 2, 4,]
+input_file_path = "data/DB4_repetition/test_data.pkl"

@@ -20,7 +20,7 @@ def get_data_input(config: Config, type='file'):
 
 if __name__ == '__main__':
 
-    model_name = 'LSTM_DB4_prepared_4_states'
+    model_name = 'LSTM_DB4_repetition'
 
     config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml"))
     data_input = get_data_input(config=config, type='file')
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     pre_process = get_pre_processor(config=config, data_source=data_input, log_fn=None)  # logger.log_input_data
     model = Model(model_path=config.model_path, logger=None)  # logger.log_output_data
 
-    # start_time = time.time()
+    do_plot = True
 
     while True:
         window = pre_process.get_next()
@@ -41,3 +41,7 @@ if __name__ == '__main__':
         inference_end_time = time.perf_counter() - inference_start_time
 
         logger.log(window[0], output_state, inference_end_time)  # Saves input data
+
+    if do_plot:
+        import plot
+        plot.plot(config.log_path)

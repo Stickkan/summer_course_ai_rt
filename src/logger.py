@@ -7,7 +7,7 @@ class Logger:
         self.path = path
         self.file = open(self.path, 'w')
         self.buffer = []
-        self.file.write(f"Current time, Inference time, Input data, Chosen output state, {', '.join(map(str, state_header))}\n")
+        # self.file.write(f"Current time, Inference time, Input data, Chosen output state, {', '.join(map(str, state_header))}\n")
         self.start_time = time.time()
 
 

@@ -15,7 +15,7 @@ def get_csv_file_list(dir: str) -> list[str]:
 
 def get_file_data(file_path: str):
     #* df = data file and contains the csv file created earlier.
-    df = pd.read_csv(file_path, sep=' ', header=0)
+    df = pd.read_csv(file_path, sep=',', header=0)
 
     signals = []
     for i in df.columns[0:-1]: #* Iterates through every column up until (not including) the last column
@@ -146,6 +146,16 @@ def reshape_data_vec(X, Y):
     Y_final = np.hstack(all_labels)
 
     return X_final, Y_final
+
+
+def normalize_features(X_train, X_val, X_test):
+    # Example: Standardization (zero mean, unit variance)
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    X_train_norm = scaler.transform(X_train)
+    X_val_norm = scaler.transform(X_val)
+    X_test_norm = scaler.transform(X_test)
+    return X_train_norm, X_val_norm, X_test_norm
 
     
 def pre_process(input_dir: str, output_file: str, config: Config):

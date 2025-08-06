@@ -14,7 +14,7 @@ def build_lstm_model(input_shape, num_classes):
     model = Sequential(
         [
             InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
-            # Normalization(),
+            Normalization(),
             LSTM(32, unroll=True),
             Dense(6, activation='relu'),
             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
@@ -29,7 +29,7 @@ def build_gru_model(input_shape, num_classes):
     model = Sequential(
         [
             InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
-            # Normalization(),
+            Normalization(),
             GRU(32, unroll=True),
             Dense(6, activation='relu'),
             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
@@ -119,11 +119,11 @@ def plot_training_history(history, output_path):
 if __name__ == '__main__':
 
     # Model type, LSTM or GRU
-    model_type = 'GRU'
+    model_type = 'LSTM'
 
 
-    f_name = model_type + '_DB4_prepared_4_states'
-    data_name= 'DB4_prepared_4_states'
+    f_name = model_type + '_DB4_repetition'
+    data_name= 'DB4_repetition'
 
     input_dir = os.path.join('data', data_name)  #* Folder to glob
     output_dir = os.path.join("model", f_name)
@@ -165,11 +165,13 @@ if __name__ == '__main__':
 
     # Reshape data
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = data_shaper.split_data(X, Y)
-    model_config.model_states = np.unique_values(Y).tolist()
+    #X_train_norm, X_val_norm, X_test_norm = data_shaper.normalize_features(X_train, X_val, X_test)
+    # model_config.model_states = np.unique_values(Y).tolist()
+    model_config.model_states = np.unique(np.hstack(Y)).tolist()
     print(model_config.model_states)
 
     # Train model
-    model, history = train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, len(model_config.model_states))
+    model, history = train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, max(model_config.model_states) + 1)
 
     # Save everything
     model.save(model_path)
@@ -178,7 +180,7 @@ if __name__ == '__main__':
     save_config(model_config, config_path)
 
     # save X_test and Y_test
-    joblib.dump((X_test, Y_test), os.path.join('data/DB4_prepared_4_states/', "test_data.pkl"))
+    joblib.dump((X_test, Y_test), os.path.join('data', data_name, "test_data.pkl"))
 
     # save plot of training history
     plot_training_history(history.history, os.path.join(output_dir, 'training_history.png'))
