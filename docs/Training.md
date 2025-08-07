@@ -1,5 +1,5 @@
-## Training using the Ninapro DB4 dataset
-Assuming that we want emg-data from FDS, triceps and biceps for the movements `0, 1, 2, 5` in Exercise C. If not then either change the labels or emg_columns lists.
+# Training using the Ninapro DB4 dataset
+Assuming that we want emg-data from FDS, triceps and biceps for the movements `0, 1, 2, 5` in `Exercise C`. If not then either change the labels or emg_columns lists.
 
 Extract all `S+_E+_A+.mat` files into a single dir with a folder named `csv`, then in GNU Octave or Matlab run
 ```
@@ -34,15 +34,21 @@ for i = 1:30
     load(files{i})
     if exercise == 3
         printf("Extracting from subject %d\n", subject)
-        save_emg_all(emg, repetition, ['csv/','S', num2str(subject), '_repetition.csv'])
+        save_emg_labels(emg, repetition, ['csv/','S', num2str(subject), '_repetition.csv'])
     endif
 endfor
 ```
-This will extract the rows in the columns corresponding to the sensors when the label is one we want. Make sure that the csv-files are in a folder inside the `data` directory under project root, such as
+This will extract the rows in the columns corresponding to the sensors when the label is one we want. The second argument to `save_emg_label` inside the for-loop, repetition, is the vector of labels to extract from. In the DB4 dataset there are 4:
+  - stimulus
+  _ restimulus
+  - repetition
+  - rerepetition
+  
+look in the documentation for the data set for explanations of these. Make sure that the csv-files are in a folder inside the `data` directory under project root, such as
 ```
 Workdir
 	data
-		_name you like_
+		*name you like*
 			S1_*.csv
 			...
 			S10_*.csv
