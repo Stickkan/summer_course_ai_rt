@@ -1,7 +1,7 @@
 import numpy as np
 import glob, os, joblib, toml
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, GRU, Dense, InputLayer, Normalization
+from tensorflow.keras.layers import LSTM, GRU, Dense, InputLayer, Normalization, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -10,27 +10,42 @@ import data_shaper
 
 
 
-def build_lstm_model(input_shape, num_classes):
-    model = Sequential(
-        [
-            InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
-            Normalization(),
-            LSTM(32, unroll=True),
-            Dense(6, activation='relu'),
-            Dense(num_classes, activation='softmax') #* Different activation functions for each layer
-        ]
-    )
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+# def build_lstm_model(input_shape, num_classes):
+#     model = Sequential(
+#         [
+#             InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
+#             Normalization(),
+#             LSTM(32, unroll=True),
+#             Dense(6, activation='relu'),
+#             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
+#         ]
+#     )
+#     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
+#     return model
+
+
+def build_lstm_model(input_shape, num_classes):
+    model = Sequential([
+        InputLayer(shape=input_shape),
+        Normalization(),
+        LSTM(128, return_sequences=True),  # 64
+        LSTM(32),
+        Dense(32, activation='relu'),
+        Dropout(0.5),
+        Dense(num_classes, activation='softmax')
+    ])
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
+
 
 
 def build_gru_model(input_shape, num_classes):
     model = Sequential(
         [
-            InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
+            InputLayer(shape=input_shape), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
             Normalization(),
-            GRU(32, unroll=True),
+            GRU(32),
             Dense(6, activation='relu'),
             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
         ]
@@ -69,7 +84,7 @@ def train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, num_
         monitor='val_loss',
         factor=0.2,
         patience=5,
-        min_lr=0.001
+        min_lr=0.00001  # 0.001
     )
 
     history = model.fit(
@@ -122,8 +137,8 @@ if __name__ == '__main__':
     model_type = 'LSTM'
 
 
-    f_name = model_type + '_DB4_repetition'
-    data_name= 'DB4_repetition'
+    f_name = model_type + '_DB4_restimulus'
+    data_name= 'DB4_restimulus'
 
     input_dir = os.path.join('data', data_name)  #* Folder to glob
     output_dir = os.path.join("model", f_name)
@@ -137,15 +152,15 @@ if __name__ == '__main__':
 
     #*  Some values for testing
     model_config = Config(
-        window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
-        window_overlap=0.5, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
+        window_size=200, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
+        window_overlap=0.1, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
         sampling_freq=2000,  # Sampling freq of recorded data, for filtering
         normalization="None",  # Normalization to be applied, TODO: Might want to include a band-stop filter for the 50 hz (+- 2 hz).
         fs=0,
         lowcut=20, #? This is too high cutoff frequency for a highpass filter. Recommend to lower it to around 5.
         highcut=450, #? This is also to high I would say.
         filter_order=4,
-        wamp_threshold=0.02, #* Mess around with this. A lower value makes the feature more susceptible to noise.
+        wamp_threshold=0.002, #* Mess around with this. A lower value makes the feature more susceptible to noise.
         features=['mav', 'wl', 'wamp', 'mavs'],
         model_path=tflite_model_path,
         log_path=log_path,
@@ -156,12 +171,13 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.makedirs(os.path.join(output_dir, 'output'))
 
-    if os.path.exists(pkl_path):
-        print("Loading data from file")
-        X, Y = joblib.load(pkl_path)
-    else:
-        print("Pre-processing from csv-files")
-        X, Y = data_shaper.pre_process(input_dir, pkl_path, model_config)
+    # if os.path.exists(pkl_path):
+    #     print("Loading data from file")
+    #     X, Y = joblib.load(pkl_path)
+    # else:
+    #     print("Pre-processing from csv-files")
+    #     X, Y = data_shaper.pre_process(input_dir, pkl_path, model_config)
+    X, Y = data_shaper.pre_process(input_dir, pkl_path, model_config)
 
     # Reshape data
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = data_shaper.split_data(X, Y)
