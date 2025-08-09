@@ -20,7 +20,7 @@ def get_data_input(config: Config, type='file'):
 
 if __name__ == '__main__':
 
-    model_name = 'LSTM_DB4_repetition'
+    model_name = 'GRU_DB4_restimulus_trim'
 
     config = get_config(file_path=os.path.join('model', model_name, f"{model_name}.toml"))
     data_input = get_data_input(config=config, type='file')

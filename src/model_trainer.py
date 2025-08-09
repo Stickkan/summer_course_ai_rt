@@ -29,7 +29,7 @@ def build_lstm_model(input_shape, num_classes):
     model = Sequential([
         InputLayer(shape=input_shape),
         Normalization(),
-        LSTM(128, return_sequences=True),  # 64
+        LSTM(64, return_sequences=True),  # 64
         LSTM(32),
         Dense(32, activation='relu'),
         Dropout(0.5),
@@ -45,8 +45,10 @@ def build_gru_model(input_shape, num_classes):
         [
             InputLayer(shape=input_shape), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
             Normalization(),
+            GRU(64, return_sequences=True),  # 64
             GRU(32),
             Dense(6, activation='relu'),
+            Dropout(0.5),
             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
         ]
     )
@@ -82,9 +84,9 @@ def train_model(model_type, X_train, Y_train, X_val, Y_val, X_test, Y_test, num_
 
     reduce_lr = ReduceLROnPlateau(
         monitor='val_loss',
-        factor=0.2,
-        patience=5,
-        min_lr=0.00001  # 0.001
+        factor=0.02,
+        patience=5,  # 5
+        min_lr=0.0000001  # 0.001  0000001
     )
 
     history = model.fit(
@@ -134,11 +136,11 @@ def plot_training_history(history, output_path):
 if __name__ == '__main__':
 
     # Model type, LSTM or GRU
-    model_type = 'LSTM'
+    model_type = 'GRU'
 
 
-    f_name = model_type + '_DB4_restimulus'
-    data_name= 'DB4_restimulus'
+    f_name = model_type + '_DB4_restimulus_trim'
+    data_name= 'DB4_restimulus_trim'
 
     input_dir = os.path.join('data', data_name)  #* Folder to glob
     output_dir = os.path.join("model", f_name)
@@ -152,15 +154,15 @@ if __name__ == '__main__':
 
     #*  Some values for testing
     model_config = Config(
-        window_size=200, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
-        window_overlap=0.1, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
+        window_size=400, #* Correspond to 200 ms since the sampling frequency for Ninapro DB4 is 2kHz
+        window_overlap=0.2, #* Common degree of overlap. Less overlap can result in decreased accuracy but shorter computation duration.
         sampling_freq=2000,  # Sampling freq of recorded data, for filtering
         normalization="None",  # Normalization to be applied, TODO: Might want to include a band-stop filter for the 50 hz (+- 2 hz).
         fs=0,
         lowcut=20, #? This is too high cutoff frequency for a highpass filter. Recommend to lower it to around 5.
         highcut=450, #? This is also to high I would say.
         filter_order=4,
-        wamp_threshold=0.002, #* Mess around with this. A lower value makes the feature more susceptible to noise.
+        wamp_threshold=0.0000000001, #* Mess around with this. A lower value makes the feature more susceptible to noise. 000000002
         features=['mav', 'wl', 'wamp', 'mavs'],
         model_path=tflite_model_path,
         log_path=log_path,
@@ -171,18 +173,12 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.makedirs(os.path.join(output_dir, 'output'))
 
-    # if os.path.exists(pkl_path):
-    #     print("Loading data from file")
-    #     X, Y = joblib.load(pkl_path)
-    # else:
-    #     print("Pre-processing from csv-files")
-    #     X, Y = data_shaper.pre_process(input_dir, pkl_path, model_config)
+    # Pre-process data, reading emg-data and labels, windowing and extract features from those windows
     X, Y = data_shaper.pre_process(input_dir, pkl_path, model_config)
 
     # Reshape data
     (X_train, Y_train), (X_val, Y_val), (X_test, Y_test) = data_shaper.split_data(X, Y)
-    #X_train_norm, X_val_norm, X_test_norm = data_shaper.normalize_features(X_train, X_val, X_test)
-    # model_config.model_states = np.unique_values(Y).tolist()
+
     model_config.model_states = np.unique(np.hstack(Y)).tolist()
     print(model_config.model_states)
 

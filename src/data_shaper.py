@@ -9,7 +9,7 @@ from config import Config
 
 
 
-def get_csv_file_list(dir: str) -> list[str]:   
+def get_csv_file_list(dir: str) -> list[str]:
     return glob.glob(dir + "/*.csv")
 
 
@@ -95,7 +95,7 @@ def process_data(signals, step: int, windows_count, config: Config):
         for window in windows:
             x.append(extract_features(window=window, features=config.features, wamp_threshold=config.wamp_threshold))
         X.append(x)
-        
+
     return X
 
 
@@ -111,7 +111,7 @@ def process_labels(labels, step: int, windows_count, config: Config) -> list[int
     Y = []
     for w in windowed_labels:
         Y.append(get_majority_label(w))
-        
+
     return Y
 
 
@@ -120,11 +120,11 @@ def split_data(X, Y, train_ratio=0.7, val_ratio=0.2): # val_ratio split: (val + 
     X_val, X_test, Y_val, Y_test = train_test_split(X_temp, Y_temp, test_size=val_ratio, random_state=42)  #* Split up validation and test
 
     return (X_train, Y_train), (X_val, Y_val), (X_test, Y_test)
-    
+
 
 def reshape_data_vec(X, Y):
-    #* Vectorized version of the reshaping function 
-    
+    #* Vectorized version of the reshaping function
+
     all_windows = []
     all_labels = []
 
@@ -157,16 +157,12 @@ def normalize_features(X_train, X_val, X_test):
     X_test_norm = scaler.transform(X_test)
     return X_train_norm, X_val_norm, X_test_norm
 
-    
+
 def pre_process(input_dir: str, output_file: str, config: Config):
     input_files = get_csv_file_list(input_dir)  #* Get csv files globbed (globbed = popular library)
     step = int(config.window_size * config.window_overlap)
     test_data = get_multiple_files_data(files=input_files, step=step, window_size=config.window_size)
     processed_test_data = process_multiple_files(data=test_data, step=step, config=config)
-
-    #* joblib is a popular library which is used to save python objects and is optimized for large data.
-    joblib.dump(processed_test_data, output_file)
-    print(f"Saved {output_file} for future use.")
 
     return processed_test_data
 
