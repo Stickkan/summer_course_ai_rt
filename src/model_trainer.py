@@ -10,20 +10,6 @@ import data_shaper
 
 
 
-# def build_lstm_model(input_shape, num_classes):
-#     model = Sequential(
-#         [
-#             InputLayer(shape=input_shape, unroll=True), #? Maybe set the input layer activation function to 'tanh' or 'sigmoid'?
-#             Normalization(),
-#             LSTM(32, unroll=True),
-#             Dense(6, activation='relu'),
-#             Dense(num_classes, activation='softmax') #* Different activation functions for each layer
-#         ]
-#     )
-#     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-#     return model
-
 
 def build_lstm_model(input_shape, num_classes):
     model = Sequential([

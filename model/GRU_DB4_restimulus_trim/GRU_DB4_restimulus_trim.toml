@@ -1,0 +1,14 @@
+window_size = 400
+window_overlap = 0.2
+sampling_freq = 2000
+normalization = "None"
+fs = 0
+lowcut = 20
+highcut = 450
+filter_order = 4
+wamp_threshold = 1e-10
+features = [ "mav", "wl", "wamp", "mavs",]
+model_path = "model/GRU_DB4_restimulus_trim/GRU_DB4_restimulus_trim.tflite"
+log_path = "model/GRU_DB4_restimulus_trim/output/inference.csv"
+model_states = [ 0, 1, 2, 3,]
+input_file_path = "data/DB4_restimulus_trim/test_data.pkl"
